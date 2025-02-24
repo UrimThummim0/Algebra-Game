@@ -9,7 +9,7 @@ class TileFontRenderer:
         # Ensure SDL2 video is initialized
         if not sdl2.SDL_WasInit(sdl2.SDL_INIT_VIDEO):
             sdl2.SDL_Init(sdl2.SDL_INIT_VIDEO)
-        
+        sdl2.sdlttf.TTF_Init()
         sdl2.ext.init()
 
         self.window = sdl2.ext.Window("Tilemap Font", size=(400, 100))
@@ -18,9 +18,9 @@ class TileFontRenderer:
         # Load font with absolute path
         FONT_PATH = os.path.abspath("/home/samsung/Algebra-Game/assets/NotoSansMath-Regular.ttf")  # Change this to your font
         if not os.path.exists(FONT_PATH):
-            raise FileNotFoundError(f"Font file not found: {FONT_PATH}")s
+            raise FileNotFoundError(f"Font file not found: {FONT_PATH}")
         
-        self.font_manager = sdl2.sdlttf.(FONT_PATH, size=48)
+        self.font_manager = sdl2.sdlttf.TTF_OpenFont(FONT_PATH, 24)
 
         self.tilemap = ['2', 'x', '+', '3']
         self.spacing = 50
