@@ -1,55 +1,92 @@
-import os
-import sys
 import sdl2
 import sdl2.ext
-import sdl2.sdlttf
 
-class TileFontRenderer:
-    def __init__(self):
-        # Ensure SDL2 video is initialized
-        if not sdl2.SDL_WasInit(sdl2.SDL_INIT_VIDEO):
-            sdl2.SDL_Init(sdl2.SDL_INIT_VIDEO)
-        sdl2.sdlttf.TTF_Init()
-        sdl2.ext.init()
+class ScalableWindow:
+    def __init__(self, title, width, height):
+        self.title = title
+        self.width = width
+        self.height = height
+        self.window = None
+        self.renderer = None
+        self.running = False
 
-        self.window = sdl2.ext.Window("Tilemap Font", size=(400, 100))
-        self.renderer = sdl2.ext.Renderer(self.window)
+    def initialize(self):
+        """Initialize SDL and create a resizable window and renderer."""
+        if sdl2.SDL_Init(sdl2.SDL_INIT_VIDEO) != 0:
+            raise RuntimeError(f"Failed to initialize SDL: {sdl2.SDL_GetError()}")
 
-        # Load font with absolute path
-        FONT_PATH = os.path.abspath("/home/samsung/Algebra-Game/assets/NotoSansMath-Regular.ttf")  # Change this to your font
-        if not os.path.exists(FONT_PATH):
-            raise FileNotFoundError(f"Font file not found: {FONT_PATH}")
-        
-        self.font_manager = sdl2.sdlttf.TTF_OpenFont(FONT_PATH, 24)
+        # Create a resizable window
+        self.window = sdl2.SDL_CreateWindow(
+            self.title.encode('utf-8'),
+            sdl2.SDL_WINDOWPOS_CENTERED,
+            sdl2.SDL_WINDOWPOS_CENTERED,
+            self.width,
+            self.height,
+            sdl2.SDL_WINDOW_SHOWN | sdl2.SDL_WINDOW_RESIZABLE
+        )
+        if not self.window:
+            raise RuntimeError(f"Failed to create window: {sdl2.SDL_GetError()}")
 
-        self.tilemap = ['2', 'x', '+', '3']
-        self.spacing = 50
+        # Create a renderer for the window
+        self.renderer = sdl2.SDL_CreateRenderer(
+            self.window,
+            -1,
+            sdl2.SDL_RENDERER_ACCELERATED
+        )
+        if not self.renderer:
+            raise RuntimeError(f"Failed to create renderer: {sdl2.SDL_GetError()}")
+
+    def handle_events(self):
+        """Handle SDL events, including window resizing."""
+        for event in sdl2.ext.get_events():
+            if event.type == sdl2.SDL_QUIT:
+                self.running = False
+            elif event.type == sdl2.SDL_WINDOWEVENT:
+                if event.window.event == sdl2.SDL_WINDOWEVENT_RESIZED:
+                    # Update the window dimensions when resized
+                    self.width = event.window.data1
+                    self.height = event.window.data2
+                    print(f"Window resized to: {self.width}x{self.height}")
+
+    def render(self):
+        """Render the current frame, scaling content to the new window size."""
+        # Clear the screen with a black color
+        sdl2.SDL_SetRenderDrawColor(self.renderer, 0, 0, 0, 255)
+        sdl2.SDL_RenderClear(self.renderer)
+
+        # Draw a simple rectangle that scales with the window size
+        rect = sdl2.SDL_Rect(
+            int(self.width * 0.25),  # 25% from the left
+            int(self.height * 0.25),  # 25% from the top
+            int(self.width * 0.5),  # 50% of the width
+            int(self.height * 0.5)  # 50% of the height
+        )
+        sdl2.SDL_SetRenderDrawColor(self.renderer, 255, 0, 0, 255)  # Red color
+        sdl2.SDL_RenderFillRect(self.renderer, rect)
+
+        # Update the screen
+        sdl2.SDL_RenderPresent(self.renderer)
+
+    def cleanup(self):
+        """Clean up resources and quit SDL."""
+        if self.renderer:
+            sdl2.SDL_DestroyRenderer(self.renderer)
+        if self.window:
+            sdl2.SDL_DestroyWindow(self.window)
+        sdl2.SDL_Quit()
 
     def run(self):
-        running = True
-        while running:
-            for event in sdl2.ext.get_events():
-                if event.type == sdl2.SDL_QUIT:
-                    running = False
-            
-            self.render()
-            sdl2.SDL_Delay(16)
-        
-        sdl2.ext.quit()
-    
-    def render(self):
-        self.renderer.clear(sdl2.ext.Color(0, 0, 0))
+        """Run the main loop of the application."""
+        self.initialize()
+        self.running = True
 
-        x_offset = 20
-        y_offset = 20
-        
-        for char in self.tilemap:
-            text_surface = self.font_manager.render(char, (255, 255, 255, 255))
-            self.renderer.copy(text_surface, dstrect=(x_offset, y_offset, 40, 50))
-            x_offset += self.spacing
-        
-        self.renderer.present()
+        while self.running:
+            self.handle_events()
+            self.render()
+
+        self.cleanup()
 
 if __name__ == "__main__":
-    app = TileFontRenderer()
+    # Create and run the scalable window
+    app = ScalableWindow("Scalable Window", 800, 600)
     app.run()
