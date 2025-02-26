@@ -6,10 +6,12 @@ EQ_SIGN_ = []
 MAP = []
 MAP_ = []
 
+
+
 def recognition():
     IN_ = input("Enter an equation: ")
     for i, char in enumerate(IN_):
-        if char in {'x', 'y', 'z'}:
+        if char in {'x', 'y', 'z'} | {'x'.upper(), 'y'.upper(), 'z'.upper()}:
             VAR_.append(char)
             MAP.append({"type": "variable", "value": char, "position": i})
             MAP_.append(MAP[i]["value"])
@@ -30,5 +32,13 @@ def recognition():
             MAP_.append(MAP[i]["value"])
 
         else:
-            print(f"Ignored Character: {char}")
+            raise SyntaxError(f"Syntax Error")                
+
+    
+
 recognition()
+
+
+TEXT = ''.join(MAP_)
+print(f"Constants={CONST_}, Variables={VAR_}, Operators={OP_}, Equals={EQ_SIGN_}")
+
